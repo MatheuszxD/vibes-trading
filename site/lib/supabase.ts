@@ -251,13 +251,16 @@ export async function generateThought(): Promise<Thought | null> {
 }
 
 export async function toggleMode(paper: boolean): Promise<boolean> {
+  const client = getSupabase();
+  if (!client) return false;
+
   try {
-    const response = await fetch(`${apiUrl}/mode`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paper }),
-    });
-    return response.ok;
+    const { error } = await client
+      .from('system_status')
+      .update({ mode: paper ? 'PAPER' : 'LIVE' })
+      .eq('id', 1);
+
+    return !error;
   } catch (error) {
     console.error('Error toggling mode:', error);
     return false;
