@@ -22,81 +22,148 @@ import StatsCards from '@/components/StatsCards';
 import PaperModePanel from '@/components/PaperModePanel';
 import TradesList from '@/components/TradesList';
 
+// Mock data for when Supabase is not connected
+const mockStatus: SystemStatus = {
+  id: 1,
+  wallet_address: 'Demo...Mode',
+  balance_sol: 0,
+  status: 'ANALYZING',
+  mode: 'PAPER',
+  analysis_progress: 42,
+  trades_analyzed: 42,
+  trades_remaining: 58,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
+const mockStats: Stats = {
+  id: 1,
+  total_pnl_sol: 0,
+  win_rate: 0,
+  total_trades: 0,
+  winning_trades: 0,
+  losing_trades: 0,
+  open_positions: 0,
+  paper_balance: 10,
+  paper_pnl_sol: 0,
+  paper_pnl_percent: 0,
+  paper_win_rate: 0,
+  paper_trades: 0,
+  paper_wins: 0,
+  paper_losses: 0,
+  paper_open: 0,
+  updated_at: new Date().toISOString(),
+};
+
+const mockThoughts: Thought[] = [
+  {
+    id: '1',
+    content: '> waiting for the bot to start trading ser\n> connect your supabase and run the bot\n> paper mode ready with 10 SOL\n> ngl this terminal looks kinda clean tho\n> gmi once you configure everything fr',
+    trigger: 'AUTO',
+    trades_count: 0,
+    win_rate: 0,
+    pnl_sol: 0,
+    created_at: new Date().toISOString(),
+  },
+];
+
 export default function Home() {
-  const [status, setStatus] = useState<SystemStatus | null>(null);
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [status, setStatus] = useState<SystemStatus | null>(mockStatus);
+  const [stats, setStats] = useState<Stats | null>(mockStats);
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [thoughts, setThoughts] = useState<Thought[]>([]);
+  const [thoughts, setThoughts] = useState<Thought[]>(mockThoughts);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
 
   // Fetch all data
   const fetchData = useCallback(async () => {
-    const [statusData, statsData, tradesData, thoughtsData] = await Promise.all([
-      getSystemStatus(),
-      getStats(),
-      getTrades(50),
-      getThoughts(10),
-    ]);
+    try {
+      const [statusData, statsData, tradesData, thoughtsData] = await Promise.all([
+        getSystemStatus(),
+        getStats(),
+        getTrades(50),
+        getThoughts(10),
+      ]);
 
-    setStatus(statusData);
-    setStats(statsData);
-    setTrades(tradesData);
-    setThoughts(thoughtsData);
-    setIsLoading(false);
+      // If we got data, use it
+      if (statusData) {
+        setStatus(statusData);
+        setIsConnected(true);
+      }
+      if (statsData) setStats(statsData);
+      if (tradesData && tradesData.length > 0) setTrades(tradesData);
+      if (thoughtsData && thoughtsData.length > 0) setThoughts(thoughtsData);
+    } catch (error) {
+      console.log('Supabase not connected, using demo mode');
+      setIsConnected(false);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Initial load
+  // Initial load with timeout
   useEffect(() => {
-    fetchData();
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000); // Max 3 seconds loading
+
+    fetchData().finally(() => {
+      clearTimeout(timeout);
+    });
+
+    return () => clearTimeout(timeout);
   }, [fetchData]);
 
-  // Realtime subscriptions
+  // Realtime subscriptions (only if connected)
   useEffect(() => {
+    if (!isConnected) return;
+
     const channels: ReturnType<typeof subscribeToTable>[] = [];
 
-    // Subscribe to system_status changes
-    channels.push(
-      subscribeToTable<SystemStatus>('system_status', (payload) => {
-        if (payload.new) setStatus(payload.new);
-      })
-    );
+    try {
+      channels.push(
+        subscribeToTable<SystemStatus>('system_status', (payload) => {
+          if (payload.new) setStatus(payload.new);
+        })
+      );
 
-    // Subscribe to stats changes
-    channels.push(
-      subscribeToTable<Stats>('stats', (payload) => {
-        if (payload.new) setStats(payload.new);
-      })
-    );
+      channels.push(
+        subscribeToTable<Stats>('stats', (payload) => {
+          if (payload.new) setStats(payload.new);
+        })
+      );
 
-    // Subscribe to trades changes
-    channels.push(
-      subscribeToTable<Trade>('trades', (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new) {
-          setTrades((prev) => [payload.new, ...prev].slice(0, 50));
-        } else if (payload.eventType === 'UPDATE' && payload.new) {
-          setTrades((prev) =>
-            prev.map((t) => (t.id === payload.new.id ? payload.new : t))
-          );
-        }
-      })
-    );
+      channels.push(
+        subscribeToTable<Trade>('trades', (payload) => {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            setTrades((prev) => [payload.new, ...prev].slice(0, 50));
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            setTrades((prev) =>
+              prev.map((t) => (t.id === payload.new.id ? payload.new : t))
+            );
+          }
+        })
+      );
 
-    // Subscribe to thoughts changes
-    channels.push(
-      subscribeToTable<Thought>('thoughts', (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new) {
-          setThoughts((prev) => [payload.new, ...prev].slice(0, 10));
-        }
-      })
-    );
+      channels.push(
+        subscribeToTable<Thought>('thoughts', (payload) => {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            setThoughts((prev) => [payload.new, ...prev].slice(0, 10));
+          }
+        })
+      );
+    } catch (error) {
+      console.log('Failed to subscribe to realtime');
+    }
 
-    // Cleanup
     return () => {
       channels.forEach((channel) => {
-        supabase.removeChannel(channel);
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
       });
     };
-  }, []);
+  }, [isConnected]);
 
   // Calculate open positions
   const openPositions = trades.filter(
@@ -105,13 +172,13 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-terminal-bg">
         <div className="text-center">
           <div className="font-pixel text-terminal-green text-xl mb-4 animate-pulse">
             VIBES
           </div>
           <div className="text-terminal-text-dim text-sm">
-            Loading<span className="animate-blink">...</span>
+            Initializing<span className="animate-blink">...</span>
           </div>
         </div>
       </div>
@@ -120,6 +187,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Demo Mode Banner */}
+      {!isConnected && (
+        <div className="bg-terminal-amber/20 border-b border-terminal-amber text-terminal-amber text-center py-2 text-xs">
+          DEMO MODE - Configure Supabase in .env.local to connect
+        </div>
+      )}
+
       {/* Header */}
       <Header status={status} />
 
@@ -140,7 +214,13 @@ export default function Home() {
             {/* Thoughts Terminal */}
             <ThoughtsTerminal
               thoughts={thoughts}
-              onRefresh={() => getThoughts(10).then(setThoughts)}
+              onRefresh={() => {
+                if (isConnected) {
+                  getThoughts(10).then(data => {
+                    if (data && data.length > 0) setThoughts(data);
+                  });
+                }
+              }}
             />
 
             {/* Trades List */}
@@ -202,7 +282,7 @@ export default function Home() {
                   {'>'} solscan.io
                 </a>
                 <a
-                  href="https://github.com"
+                  href="https://github.com/MatheuszxD/vibes-trading"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-terminal-green text-sm hover:underline"

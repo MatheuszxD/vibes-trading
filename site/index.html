@@ -5,15 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIBES Trading | Autonomous Solana Trader</title>
     <meta name="description" content="Autonomous trading bot on Solana blockchain powered by Claude AI">
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- Supabase -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         :root {
             --bg: #0a0a0a;
@@ -27,59 +22,34 @@
             --amber: #f59e0b;
             --red: #ef4444;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'JetBrains Mono', 'Space Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
             background-color: var(--bg);
             color: var(--text);
             min-height: 100vh;
             line-height: 1.5;
         }
-
-        /* Scanlines */
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.15),
-                rgba(0, 0, 0, 0.15) 1px,
-                transparent 1px,
-                transparent 2px
-            );
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
             pointer-events: none;
             z-index: 1000;
             opacity: 0.3;
         }
-
-        .font-pixel {
-            font-family: 'Press Start 2P', monospace;
-        }
-
-        .glow-green {
-            text-shadow: 0 0 5px var(--green), 0 0 10px var(--green), 0 0 20px rgba(34, 197, 94, 0.4);
-        }
-
-        /* Header */
+        .font-pixel { font-family: 'Press Start 2P', monospace; }
+        .glow-green { text-shadow: 0 0 5px var(--green), 0 0 10px var(--green), 0 0 20px rgba(34,197,94,0.4); }
         .header {
             border-bottom: 1px solid var(--border);
-            background: rgba(10, 10, 10, 0.95);
+            background: rgba(10,10,10,0.95);
             backdrop-filter: blur(10px);
             position: sticky;
             top: 0;
             z-index: 50;
         }
-
         .header-content {
             max-width: 1280px;
             margin: 0 auto;
@@ -88,35 +58,11 @@
             align-items: center;
             justify-content: space-between;
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo h1 {
-            font-size: 1.25rem;
-            color: var(--green);
-            letter-spacing: 0.1em;
-        }
-
-        .tagline {
-            color: var(--text-dim);
-            font-size: 0.75rem;
-            display: none;
-        }
-
-        @media (min-width: 640px) {
-            .tagline { display: inline; }
-        }
-
-        .nav {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
+        .logo { display: flex; align-items: center; gap: 1rem; }
+        .logo h1 { font-size: 1.25rem; color: var(--green); letter-spacing: 0.1em; }
+        .tagline { color: var(--text-dim); font-size: 0.75rem; }
+        @media (max-width: 640px) { .tagline { display: none; } }
+        .nav { display: flex; align-items: center; gap: 0.5rem; }
         .nav-link {
             color: var(--text-dim);
             font-size: 0.75rem;
@@ -124,16 +70,8 @@
             padding: 0.25rem 0.75rem;
             transition: color 0.2s;
         }
-
-        .nav-link:hover {
-            color: var(--text);
-        }
-
-        .nav-link.active {
-            color: var(--green);
-            border: 1px solid rgba(34, 197, 94, 0.5);
-        }
-
+        .nav-link:hover { color: var(--text); }
+        .nav-link.active { color: var(--green); border: 1px solid rgba(34,197,94,0.5); }
         .status-badge {
             display: flex;
             align-items: center;
@@ -143,98 +81,41 @@
             border-radius: 4px;
             margin-left: 1rem;
         }
-
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             border-radius: 50%;
             background: var(--red);
         }
-
-        .status-dot.online {
-            background: var(--green);
-            box-shadow: 0 0 10px var(--green);
-        }
-
-        .status-dot.analyzing {
-            background: var(--amber);
-            box-shadow: 0 0 10px var(--amber);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* Ticker */
+        .status-dot.online { background: var(--green); box-shadow: 0 0 10px var(--green); }
+        .status-dot.analyzing { background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .ticker-bar {
             background: var(--card);
             border-bottom: 1px solid var(--border);
             padding: 0.5rem 0;
             overflow: hidden;
         }
-
         .ticker-content {
             display: flex;
             gap: 2rem;
             animation: ticker 30s linear infinite;
             white-space: nowrap;
         }
-
-        .ticker-content:hover {
-            animation-play-state: paused;
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .ticker-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
+        .demo-banner {
+            background: rgba(245,158,11,0.2);
+            border-bottom: 1px solid var(--amber);
+            color: var(--amber);
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.75rem;
         }
-
-        @keyframes ticker {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        .ticker-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        /* Main */
-        .main {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 1.5rem 1rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 1024px) {
-            .grid {
-                grid-template-columns: 2fr 1fr;
-            }
-        }
-
-        .left-col {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .right-col {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-        }
-
+        .main { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1rem; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .grid { grid-template-columns: 2fr 1fr; } }
+        .left-col, .right-col { display: flex; flex-direction: column; gap: 1.5rem; }
+        .card { background: var(--card); border: 1px solid var(--border); }
         .card-header {
             padding: 1rem;
             border-bottom: 1px solid var(--border);
@@ -242,191 +123,28 @@
             align-items: center;
             justify-content: space-between;
         }
-
-        .card-title {
-            font-size: 0.75rem;
-            color: var(--text);
-        }
-
-        .card-body {
-            padding: 1rem;
-        }
-
-        /* Pre-Trading Analysis */
-        .analysis-status {
-            font-size: 0.75rem;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .analysis-status.complete {
-            color: var(--green);
-        }
-
-        .analysis-status.processing {
-            color: var(--amber);
-        }
-
-        .progress-text {
-            color: var(--text-dim);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: var(--card-hover);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 1rem;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--green), var(--green-bright));
-            transition: width 0.5s ease;
-        }
-
-        .progress-steps {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .progress-step {
-            color: var(--text-dim);
-        }
-
-        .progress-step.active {
-            color: var(--green);
-        }
-
-        .analysis-stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .analysis-note {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            font-style: italic;
-            margin-top: 1rem;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        @media (min-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .stat-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            padding: 1rem;
-            transition: all 0.2s;
-        }
-
-        .stat-card:hover {
-            background: var(--card-hover);
-            transform: translateY(-2px);
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 0.875rem;
-        }
-
-        .stat-value.positive {
-            color: var(--green);
-        }
-
-        .stat-value.negative {
-            color: var(--red);
-        }
-
-        .stat-value.neutral {
-            color: var(--text);
-        }
-
-        /* Terminal */
-        .terminal-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .terminal-title {
-            color: var(--amber);
-        }
-
-        .terminal-subtitle {
-            color: var(--text-dim);
-            font-size: 0.75rem;
-        }
-
-        .terminal-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.75rem;
-            color: var(--text-dim);
-        }
-
-        .terminal-prompt {
-            color: var(--green);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        .terminal-prompt span {
-            color: var(--text-dim);
-        }
-
-        .terminal-output {
-            min-height: 120px;
-            margin-bottom: 1rem;
-        }
-
-        .terminal-line {
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .terminal-line span {
-            color: var(--text-dim);
-            margin-right: 0.5rem;
-        }
-
-        .terminal-cursor {
-            animation: blink 1s step-end infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        .terminal-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
+        .card-title { font-size: 0.75rem; color: var(--text); }
+        .card-body { padding: 1rem; }
+        .progress-bar { height: 4px; background: var(--card-hover); border-radius: 2px; overflow: hidden; margin-bottom: 1rem; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--green-bright)); transition: width 0.5s ease; }
+        .progress-steps { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 1rem; }
+        .progress-step { color: var(--text-dim); }
+        .progress-step.active { color: var(--green); }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        @media (min-width: 1024px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 1rem; transition: all 0.2s; }
+        .stat-card:hover { background: var(--card-hover); transform: translateY(-2px); }
+        .stat-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem; }
+        .stat-value { font-size: 0.875rem; }
+        .stat-value.positive { color: var(--green); }
+        .stat-value.negative { color: var(--red); }
+        .terminal-prompt { color: var(--green); font-size: 0.875rem; margin-bottom: 1rem; }
+        .terminal-prompt span { color: var(--text-dim); }
+        .terminal-output { min-height: 120px; margin-bottom: 1rem; }
+        .terminal-line { font-size: 0.875rem; margin-bottom: 0.25rem; }
+        .terminal-line span { color: var(--text-dim); margin-right: 0.5rem; }
+        .terminal-cursor { animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .btn {
             background: var(--card);
             border: 1px solid var(--border);
@@ -437,16 +155,7 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-
-        .btn:hover {
-            background: var(--card-hover);
-            border-color: #52525b;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
+        .btn:hover { background: var(--card-hover); border-color: #52525b; }
         .terminal-footer {
             border-top: 1px solid var(--border);
             padding: 0.75rem 1rem;
@@ -455,140 +164,9 @@
             font-size: 0.75rem;
             color: var(--text-dim);
         }
-
-        /* Trades Table */
-        .trades-table {
-            width: 100%;
-            font-size: 0.875rem;
-        }
-
-        .trades-table th {
-            text-align: left;
-            padding: 0.75rem;
-            font-weight: normal;
-            color: var(--text-dim);
-            font-size: 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .trades-table th:nth-child(4),
-        .trades-table th:nth-child(5) {
-            text-align: right;
-        }
-
-        .trades-table th:last-child {
-            text-align: center;
-        }
-
-        .trades-table td {
-            padding: 0.75rem;
-            border-bottom: 1px solid rgba(63, 63, 70, 0.5);
-        }
-
-        .trades-table td:nth-child(4),
-        .trades-table td:nth-child(5) {
-            text-align: right;
-        }
-
-        .trades-table td:last-child {
-            text-align: center;
-        }
-
-        .trades-table tr:hover {
-            background: var(--card-hover);
-        }
-
-        .trade-symbol {
-            font-weight: 500;
-        }
-
-        .trade-paper {
-            font-size: 0.75rem;
-            color: var(--amber);
-            margin-left: 0.5rem;
-        }
-
-        .trade-side.buy {
-            color: var(--green);
-        }
-
-        .trade-side.sell {
-            color: var(--red);
-        }
-
-        .trade-status {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-        }
-
-        .trade-status.confirmed {
-            background: rgba(34, 197, 94, 0.2);
-            color: var(--green);
-        }
-
-        .trade-status.pending {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--amber);
-        }
-
-        .trade-status.failed {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--red);
-        }
-
-        /* Paper Mode Panel */
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .toggle {
-            position: relative;
-            width: 48px;
-            height: 24px;
-            border-radius: 12px;
-            background: var(--amber);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .toggle.live {
-            background: var(--green);
-        }
-
-        .toggle-knob {
-            position: absolute;
-            top: 4px;
-            left: 4px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: white;
-            transition: transform 0.2s;
-        }
-
-        .toggle.live .toggle-knob {
-            transform: translateX(24px);
-        }
-
-        .panel-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-        }
-
-        .panel-label {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-        }
-
-        .panel-value {
-            font-size: 0.875rem;
-        }
-
+        .panel-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; }
+        .panel-label { font-size: 0.75rem; color: var(--text-dim); }
+        .panel-value { font-size: 0.875rem; }
         .panel-footer {
             border-top: 1px solid var(--border);
             padding: 0.75rem 1rem;
@@ -596,27 +174,27 @@
             font-size: 0.75rem;
             color: var(--text-dim);
         }
-
-        /* Wallet & Links */
-        .link-item {
-            display: block;
-            color: var(--green);
-            font-size: 0.875rem;
-            text-decoration: none;
-            padding: 0.25rem 0;
+        .toggle {
+            position: relative;
+            width: 48px; height: 24px;
+            border-radius: 12px;
+            background: var(--amber);
+            cursor: pointer;
+            transition: background 0.2s;
         }
-
-        .link-item:hover {
-            text-decoration: underline;
+        .toggle.live { background: var(--green); }
+        .toggle-knob {
+            position: absolute;
+            top: 4px; left: 4px;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: white;
+            transition: transform 0.2s;
         }
-
-        /* Footer */
-        .footer {
-            border-top: 1px solid var(--border);
-            padding: 1rem;
-            margin-top: auto;
-        }
-
+        .toggle.live .toggle-knob { transform: translateX(24px); }
+        .link-item { display: block; color: var(--green); font-size: 0.875rem; text-decoration: none; padding: 0.25rem 0; }
+        .link-item:hover { text-decoration: underline; }
+        .footer { border-top: 1px solid var(--border); padding: 1rem; margin-top: auto; }
         .footer-content {
             max-width: 1280px;
             margin: 0 auto;
@@ -627,204 +205,104 @@
             font-size: 0.75rem;
             color: var(--text-dim);
         }
-
-        @media (min-width: 640px) {
-            .footer-content {
-                flex-direction: row;
-                justify-content: space-between;
-            }
-        }
-
-        /* Loading */
-        .loading {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .loading-text {
-            color: var(--text-dim);
-            font-size: 0.875rem;
-        }
-
-        /* History */
-        .history-section {
-            border-top: 1px solid var(--border);
-            padding-top: 1rem;
-            margin-top: 1rem;
-            display: none;
-        }
-
-        .history-section.show {
-            display: block;
-        }
-
-        .history-title {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            margin-bottom: 0.5rem;
-        }
-
-        .history-list {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .history-item {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.75rem;
-        }
-
-        .history-date {
-            color: var(--text-dim);
-            margin-bottom: 0.5rem;
-        }
-
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            color: var(--text-dim);
-            font-size: 0.875rem;
-            padding: 2rem;
-        }
+        @media (min-width: 640px) { .footer-content { flex-direction: row; justify-content: space-between; } }
+        .empty-state { text-align: center; color: var(--text-dim); font-size: 0.875rem; padding: 2rem; }
     </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Loading State -->
-        <div class="loading" id="loading">
-            <div class="font-pixel glow-green" style="font-size: 1.25rem;">VIBES</div>
-            <div class="loading-text">Loading<span class="terminal-cursor">...</span></div>
-        </div>
-    </div>
-
+    <div id="app"></div>
     <script>
-        // Configuration - UPDATE THESE VALUES
+        // Configuration
         const SUPABASE_URL = 'YOUR_SUPABASE_URL';
         const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
         const API_URL = 'http://localhost:3001';
 
-        // Initialize Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // State
-        let state = {
-            status: null,
-            stats: null,
+        // Mock data
+        const mockData = {
+            status: {
+                id: 1,
+                wallet_address: 'Demo...Mode',
+                balance_sol: 0,
+                status: 'ANALYZING',
+                mode: 'PAPER',
+                analysis_progress: 42,
+                trades_analyzed: 42,
+                trades_remaining: 58
+            },
+            stats: {
+                paper_balance: 10,
+                paper_pnl_sol: 0,
+                paper_pnl_percent: 0,
+                paper_win_rate: 0,
+                paper_trades: 0,
+                paper_wins: 0,
+                paper_losses: 0,
+                paper_open: 0
+            },
             trades: [],
-            thoughts: [],
-            showHistory: false
+            thoughts: [{
+                id: '1',
+                content: '> waiting for the bot to start trading ser\n> connect your supabase and run the bot\n> paper mode ready with 10 SOL\n> ngl this terminal looks kinda clean tho\n> gmi once you configure everything fr',
+                trigger: 'AUTO',
+                trades_count: 0,
+                win_rate: 0,
+                pnl_sol: 0,
+                created_at: new Date().toISOString()
+            }]
         };
 
-        // Fetch functions
-        async function fetchSystemStatus() {
-            const { data } = await supabase.from('system_status').select('*').eq('id', 1).single();
-            return data;
-        }
+        let state = { ...mockData, isConnected: false, showHistory: false };
+        let supabase = null;
 
-        async function fetchStats() {
-            const { data } = await supabase.from('stats').select('*').eq('id', 1).single();
-            return data;
-        }
-
-        async function fetchTrades() {
-            const { data } = await supabase.from('trades').select('*').order('created_at', { ascending: false }).limit(50);
-            return data || [];
-        }
-
-        async function fetchThoughts() {
-            const { data } = await supabase.from('thoughts').select('*').order('created_at', { ascending: false }).limit(10);
-            return data || [];
-        }
-
-        async function generateThought() {
-            try {
-                const response = await fetch(`${API_URL}/thoughts/generate`, { method: 'POST' });
-                if (response.ok) {
-                    const thoughts = await fetchThoughts();
-                    state.thoughts = thoughts;
-                    render();
+        // Initialize Supabase if configured
+        function initSupabase() {
+            if (SUPABASE_URL && SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_KEY && SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+                try {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    return true;
+                } catch (e) {
+                    console.log('Failed to init Supabase:', e);
                 }
-            } catch (e) {
-                console.error('Error generating thought:', e);
             }
+            return false;
         }
 
-        async function toggleMode() {
-            const isPaper = state.status?.mode === 'PAPER';
+        // Fetch functions
+        async function fetchData() {
+            if (!supabase) return;
             try {
-                await fetch(`${API_URL}/mode`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ paper: !isPaper })
-                });
+                const [statusRes, statsRes, tradesRes, thoughtsRes] = await Promise.all([
+                    supabase.from('system_status').select('*').eq('id', 1).single(),
+                    supabase.from('stats').select('*').eq('id', 1).single(),
+                    supabase.from('trades').select('*').order('created_at', { ascending: false }).limit(50),
+                    supabase.from('thoughts').select('*').order('created_at', { ascending: false }).limit(10)
+                ]);
+                if (statusRes.data) { state.status = statusRes.data; state.isConnected = true; }
+                if (statsRes.data) state.stats = statsRes.data;
+                if (tradesRes.data) state.trades = tradesRes.data;
+                if (thoughtsRes.data && thoughtsRes.data.length > 0) state.thoughts = thoughtsRes.data;
             } catch (e) {
-                console.error('Error toggling mode:', e);
+                console.log('Fetch error:', e);
             }
         }
 
-        // Utility functions
-        function formatTime(timestamp) {
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diff = now - date;
-            const seconds = Math.floor(diff / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const hours = Math.floor(minutes / 60);
-            if (hours > 0) return `${hours}h ago`;
-            if (minutes > 0) return `${minutes}m ago`;
-            return `${seconds}s ago`;
-        }
-
-        function formatPnl(pnl, percent) {
-            if (pnl === null) return '-';
-            const sign = pnl >= 0 ? '+' : '';
-            return `${sign}${pnl.toFixed(4)} (${sign}${percent?.toFixed(1)}%)`;
-        }
-
-        function getStatusClass(status) {
-            if (status === 'TRADING') return 'online';
-            if (status === 'ANALYZING') return 'analyzing';
+        function getStatusClass(s) {
+            if (s === 'TRADING') return 'online';
+            if (s === 'ANALYZING') return 'analyzing';
             return '';
         }
 
-        // Render function
         function render() {
-            const { status, stats, trades, thoughts, showHistory } = state;
-
+            const { status, stats, trades, thoughts, isConnected, showHistory } = state;
             const progress = status?.analysis_progress || 0;
             const isComplete = progress >= 100;
-            const paperBalance = stats?.paper_balance || 10;
-            const paperPnl = stats?.paper_pnl_sol || 0;
-            const paperPnlPercent = stats?.paper_pnl_percent || 0;
-            const paperWinRate = stats?.paper_win_rate || 0;
-            const paperTrades = stats?.paper_trades || 0;
-            const paperWins = stats?.paper_wins || 0;
-            const paperLosses = stats?.paper_losses || 0;
-            const paperOpen = stats?.paper_open || 0;
-            const isPaper = status?.mode === 'PAPER';
-
-            const openPositions = trades.filter(t => t.side === 'BUY' && t.pnl_sol === null).length;
             const latestThought = thoughts[0];
             const historyThoughts = thoughts.slice(1);
-
-            // Ticker items
-            const tickerItems = trades.reduce((acc, trade) => {
-                if (trade.pnl_percent !== null && !acc[trade.symbol]) {
-                    acc[trade.symbol] = { symbol: trade.symbol, pnl: trade.pnl_percent };
-                }
-                return acc;
-            }, {});
-            const tickerArray = Object.values(tickerItems);
+            const openPositions = trades.filter(t => t.side === 'BUY' && t.pnl_sol === null).length;
+            const isPaper = status?.mode === 'PAPER';
 
             document.getElementById('app').innerHTML = `
-                <!-- Header -->
+                ${!isConnected ? '<div class="demo-banner">DEMO MODE - Configure SUPABASE_URL and SUPABASE_KEY in index.html to connect</div>' : ''}
                 <header class="header">
                     <div class="header-content">
                         <div class="logo">
@@ -837,146 +315,88 @@
                             <a href="https://github.com/MatheuszxD/vibes-trading" target="_blank" class="nav-link">[DOCS]</a>
                             <div class="status-badge">
                                 <span class="status-dot ${getStatusClass(status?.status)}"></span>
-                                <span style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">
-                                    ${status?.status || 'OFFLINE'}
-                                </span>
+                                <span style="font-size:0.75rem;color:var(--text-dim);text-transform:uppercase">${status?.status || 'OFFLINE'}</span>
                             </div>
                         </nav>
                     </div>
                 </header>
 
-                <!-- Ticker -->
                 <div class="ticker-bar">
-                    ${tickerArray.length > 0 ? `
-                        <div class="ticker-content">
-                            ${[...tickerArray, ...tickerArray, ...tickerArray].map(item => `
-                                <div class="ticker-item">
-                                    <span style="color: ${item.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">●</span>
-                                    <span style="font-weight: 500;">${item.symbol}</span>
-                                    <span style="color: ${item.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">
-                                        ${item.pnl >= 0 ? '+' : ''}${item.pnl.toFixed(1)}%
-                                    </span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : `
-                        <div style="text-align: center; color: var(--text-dim); font-size: 0.75rem;">
-                            Waiting for trades...
-                        </div>
-                    `}
+                    <div style="text-align:center;color:var(--text-dim);font-size:0.75rem">
+                        ${trades.length > 0 ? trades.slice(0,5).map(t => `<span style="margin:0 1rem;color:${t.pnl_percent >= 0 ? 'var(--green)' : 'var(--red)'}">● ${t.symbol} ${t.pnl_percent >= 0 ? '+' : ''}${(t.pnl_percent || 0).toFixed(1)}%</span>`).join('') : 'Waiting for trades...'}
+                    </div>
                 </div>
 
-                <!-- Main -->
                 <main class="main">
                     <div class="grid">
-                        <!-- Left Column -->
                         <div class="left-col">
-                            <!-- Pre-Trading Analysis -->
                             <div class="card">
                                 <div class="card-header">
                                     <h2 class="card-title font-pixel">PRE-TRADING ANALYSIS</h2>
-                                    <span class="analysis-status ${isComplete ? 'complete' : 'processing'}">
-                                        [${isComplete ? 'COMPLETE' : 'PROCESSING'}]
-                                    </span>
+                                    <span style="font-size:0.75rem;color:${isComplete ? 'var(--green)' : 'var(--amber)'};animation:pulse 2s ease-in-out infinite">[${isComplete ? 'COMPLETE' : 'PROCESSING'}]</span>
                                 </div>
                                 <div class="card-body">
-                                    <p class="progress-text">
-                                        ${isComplete ? 'Analysis complete. Trading mode active.' : 'Loading historical market data...'}
-                                    </p>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: ${progress}%"></div>
-                                    </div>
+                                    <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:1rem">${isComplete ? 'Analysis complete. Trading mode active.' : 'Loading historical market data...'}</p>
+                                    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
                                     <div class="progress-steps">
-                                        ${[0, 25, 50, 75, 100].map(step => `
-                                            <span class="progress-step ${progress >= step ? 'active' : ''}">${step}%</span>
-                                        `).join('')}
+                                        ${[0,25,50,75,100].map(s => `<span class="progress-step ${progress >= s ? 'active' : ''}">${s}%</span>`).join('')}
                                     </div>
-                                    <div class="analysis-stats">
-                                        <div style="color: var(--text-dim);">
-                                            <span style="color: var(--amber)">${status?.trades_remaining || 0}</span> trades remaining
-                                        </div>
-                                        <div style="color: var(--text-dim);">
-                                            <span style="color: var(--green)">${status?.trades_analyzed || 0}</span> trades analyzed
-                                        </div>
+                                    <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding-top:1rem;border-top:1px solid var(--border)">
+                                        <span style="color:var(--text-dim)"><span style="color:var(--amber)">${status?.trades_remaining || 0}</span> remaining</span>
+                                        <span style="color:var(--text-dim)"><span style="color:var(--green)">${status?.trades_analyzed || 0}</span> analyzed</span>
                                     </div>
-                                    ${!isComplete ? `
-                                        <div class="analysis-note">* on-chain trading will begin once analysis reaches 100%</div>
-                                    ` : ''}
                                 </div>
                             </div>
 
-                            <!-- Stats Cards -->
                             <div class="stats-grid" id="stats">
                                 <div class="stat-card">
                                     <div class="stat-label">TOTAL PNL</div>
-                                    <div class="stat-value font-pixel ${paperPnl >= 0 ? 'positive glow-green' : 'negative'}">
-                                        ${paperPnl >= 0 ? '+' : ''}${paperPnl.toFixed(4)} SOL
-                                    </div>
+                                    <div class="stat-value font-pixel ${(stats?.paper_pnl_sol || 0) >= 0 ? 'positive glow-green' : 'negative'}">${(stats?.paper_pnl_sol || 0) >= 0 ? '+' : ''}${(stats?.paper_pnl_sol || 0).toFixed(4)} SOL</div>
                                 </div>
                                 <div class="stat-card">
                                     <div class="stat-label">WIN RATE</div>
-                                    <div class="stat-value font-pixel ${paperWinRate >= 50 ? 'positive' : ''}" style="color: ${paperWinRate >= 50 ? 'var(--green)' : 'var(--amber)'}">
-                                        ${paperWinRate.toFixed(1)}%
-                                    </div>
+                                    <div class="stat-value font-pixel" style="color:${(stats?.paper_win_rate || 0) >= 50 ? 'var(--green)' : 'var(--amber)'}">${(stats?.paper_win_rate || 0).toFixed(1)}%</div>
                                 </div>
                                 <div class="stat-card">
                                     <div class="stat-label">TOTAL TRADES</div>
-                                    <div class="stat-value font-pixel neutral">${paperTrades}</div>
+                                    <div class="stat-value font-pixel">${stats?.paper_trades || 0}</div>
                                 </div>
                                 <div class="stat-card">
                                     <div class="stat-label">OPEN POS</div>
-                                    <div class="stat-value font-pixel" style="color: ${openPositions > 0 ? 'var(--amber)' : 'var(--text-dim)'}">
-                                        ${openPositions} / 5
-                                    </div>
+                                    <div class="stat-value font-pixel" style="color:${openPositions > 0 ? 'var(--amber)' : 'var(--text-dim)'}">${openPositions} / 5</div>
                                 </div>
                             </div>
 
-                            <!-- Thoughts Terminal -->
                             <div class="card">
                                 <div class="card-header">
-                                    <div class="terminal-header">
-                                        <h2 class="card-title font-pixel terminal-title">thoughts?</h2>
-                                        <span class="terminal-subtitle">- ai analysis</span>
+                                    <div style="display:flex;align-items:center;gap:0.5rem">
+                                        <h2 class="card-title font-pixel" style="color:var(--amber)">thoughts?</h2>
+                                        <span style="color:var(--text-dim);font-size:0.75rem">- ai analysis</span>
                                     </div>
-                                    <div class="terminal-status">
-                                        <span class="status-dot online"></span>
-                                        ready
+                                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text-dim)">
+                                        <span class="status-dot online"></span> ready
                                     </div>
                                 </div>
                                 <div class="card-body">
-                                    <div class="terminal-prompt">
-                                        <span>$</span> analyze --trades --roast
-                                    </div>
+                                    <div class="terminal-prompt"><span>$</span> analyze --trades --roast</div>
                                     <div class="terminal-output">
-                                        ${latestThought ?
-                                            latestThought.content.split('\n').filter(l => l.trim()).map(line => `
-                                                <div class="terminal-line">
-                                                    <span>></span>${line.replace(/^>\s*/, '')}
-                                                </div>
-                                            `).join('')
-                                        : `
-                                            <div class="terminal-line">
-                                                <span>></span>waiting for trades to analyze...<span class="terminal-cursor">_</span>
-                                            </div>
-                                        `}
+                                        ${latestThought ? latestThought.content.split('\n').filter(l => l.trim()).map(line => `<div class="terminal-line"><span>></span>${line.replace(/^>\s*/, '')}</div>`).join('') : '<div class="terminal-line"><span>></span>waiting for trades to analyze...<span class="terminal-cursor">_</span></div>'}
                                     </div>
-                                    <div class="terminal-actions">
+                                    <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
                                         <button class="btn" onclick="toggleHistory()">history (${historyThoughts.length})</button>
                                         <button class="btn" onclick="generateThought()">force refresh</button>
                                     </div>
-                                    <div class="history-section ${showHistory ? 'show' : ''}" id="history">
-                                        <div class="history-title">Previous thoughts:</div>
-                                        <div class="history-list">
-                                            ${historyThoughts.map(thought => `
-                                                <div class="history-item">
-                                                    <div class="history-date">${new Date(thought.created_at).toLocaleString()}</div>
-                                                    ${thought.content.split('\n').filter(l => l.trim()).map(line => `
-                                                        <div><span style="color: var(--text-dim); margin-right: 0.25rem;">></span>${line.replace(/^>\s*/, '')}</div>
-                                                    `).join('')}
+                                    ${showHistory && historyThoughts.length > 0 ? `
+                                        <div style="border-top:1px solid var(--border);padding-top:1rem">
+                                            <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem">Previous thoughts:</div>
+                                            ${historyThoughts.map(t => `
+                                                <div style="background:var(--bg);border:1px solid var(--border);padding:0.75rem;margin-bottom:0.5rem;font-size:0.75rem">
+                                                    <div style="color:var(--text-dim);margin-bottom:0.5rem">${new Date(t.created_at).toLocaleString()}</div>
+                                                    ${t.content.split('\n').filter(l => l.trim()).map(line => `<div><span style="color:var(--text-dim);margin-right:0.25rem">></span>${line.replace(/^>\s*/, '')}</div>`).join('')}
                                                 </div>
                                             `).join('')}
                                         </div>
-                                    </div>
+                                    ` : ''}
                                 </div>
                                 <div class="terminal-footer">
                                     <span>powered by claude</span>
@@ -984,124 +404,78 @@
                                 </div>
                             </div>
 
-                            <!-- Trades List -->
                             <div class="card">
-                                <div class="card-header">
-                                    <h2 class="card-title font-pixel">RECENT TRADES</h2>
-                                </div>
+                                <div class="card-header"><h2 class="card-title font-pixel">RECENT TRADES</h2></div>
                                 ${trades.length > 0 ? `
-                                    <div style="overflow-x: auto;">
-                                        <table class="trades-table">
+                                    <div style="overflow-x:auto">
+                                        <table style="width:100%;font-size:0.875rem;border-collapse:collapse">
                                             <thead>
-                                                <tr>
-                                                    <th>TIME</th>
-                                                    <th>TOKEN</th>
-                                                    <th>SIDE</th>
-                                                    <th>AMOUNT</th>
-                                                    <th>PNL</th>
-                                                    <th>STATUS</th>
+                                                <tr style="border-bottom:1px solid var(--border)">
+                                                    <th style="text-align:left;padding:0.75rem;font-weight:normal;color:var(--text-dim);font-size:0.75rem">TOKEN</th>
+                                                    <th style="text-align:left;padding:0.75rem;font-weight:normal;color:var(--text-dim);font-size:0.75rem">SIDE</th>
+                                                    <th style="text-align:right;padding:0.75rem;font-weight:normal;color:var(--text-dim);font-size:0.75rem">AMOUNT</th>
+                                                    <th style="text-align:right;padding:0.75rem;font-weight:normal;color:var(--text-dim);font-size:0.75rem">PNL</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                ${trades.slice(0, 10).map(trade => `
-                                                    <tr>
-                                                        <td style="color: var(--text-dim); font-size: 0.75rem;">${formatTime(trade.created_at)}</td>
-                                                        <td>
-                                                            <span class="trade-symbol">${trade.symbol}</span>
-                                                            ${trade.is_paper ? '<span class="trade-paper">[P]</span>' : ''}
-                                                        </td>
-                                                        <td>
-                                                            <span class="trade-side ${trade.side.toLowerCase()}">${trade.side}</span>
-                                                        </td>
-                                                        <td style="font-family: 'JetBrains Mono', monospace;">${trade.amount_sol.toFixed(4)} SOL</td>
-                                                        <td style="font-family: 'JetBrains Mono', monospace; color: ${trade.pnl_sol === null ? 'var(--text-dim)' : trade.pnl_sol >= 0 ? 'var(--green)' : 'var(--red)'}">
-                                                            ${formatPnl(trade.pnl_sol, trade.pnl_percent)}
-                                                        </td>
-                                                        <td>
-                                                            <span class="trade-status ${trade.status.toLowerCase()}">${trade.status}</span>
-                                                        </td>
+                                                ${trades.slice(0,10).map(t => `
+                                                    <tr style="border-bottom:1px solid rgba(63,63,70,0.5)">
+                                                        <td style="padding:0.75rem">${t.symbol}${t.is_paper ? '<span style="color:var(--amber);font-size:0.75rem;margin-left:0.5rem">[P]</span>' : ''}</td>
+                                                        <td style="padding:0.75rem;color:${t.side === 'BUY' ? 'var(--green)' : 'var(--red)'}">${t.side}</td>
+                                                        <td style="padding:0.75rem;text-align:right">${(t.amount_sol || 0).toFixed(4)} SOL</td>
+                                                        <td style="padding:0.75rem;text-align:right;color:${t.pnl_sol === null ? 'var(--text-dim)' : t.pnl_sol >= 0 ? 'var(--green)' : 'var(--red)'}">${t.pnl_sol === null ? '-' : `${t.pnl_sol >= 0 ? '+' : ''}${t.pnl_sol.toFixed(4)}`}</td>
                                                     </tr>
                                                 `).join('')}
                                             </tbody>
                                         </table>
                                     </div>
-                                    ${trades.length > 10 ? `
-                                        <div style="border-top: 1px solid var(--border); padding: 0.75rem; text-align: center; font-size: 0.75rem; color: var(--text-dim);">
-                                            Showing 10 of ${trades.length} trades
-                                        </div>
-                                    ` : ''}
-                                ` : `
-                                    <div class="empty-state">No trades yet. Waiting for opportunities...</div>
-                                `}
+                                ` : '<div class="empty-state">No trades yet. Waiting for opportunities...</div>'}
                             </div>
                         </div>
 
-                        <!-- Right Column -->
                         <div class="right-col">
-                            <!-- Paper Mode Panel -->
                             <div class="card">
                                 <div class="card-header">
-                                    <h2 class="card-title font-pixel" style="color: var(--amber);">
-                                        ${isPaper ? 'PAPER MODE' : 'LIVE MODE'}
-                                    </h2>
-                                    <div class="toggle ${isPaper ? '' : 'live'}" onclick="toggleMode()">
-                                        <div class="toggle-knob"></div>
-                                    </div>
+                                    <h2 class="card-title font-pixel" style="color:var(--amber)">${isPaper ? 'PAPER MODE' : 'LIVE MODE'}</h2>
+                                    <div class="toggle ${isPaper ? '' : 'live'}"><div class="toggle-knob"></div></div>
                                 </div>
                                 <div class="card-body">
                                     <div class="panel-row">
                                         <span class="panel-label">BALANCE</span>
-                                        <span class="panel-value">${paperBalance.toFixed(4)} SOL</span>
+                                        <span class="panel-value">${(stats?.paper_balance || 10).toFixed(4)} SOL</span>
                                     </div>
                                     <div class="panel-row">
                                         <span class="panel-label">PNL</span>
-                                        <span class="panel-value" style="color: ${paperPnl >= 0 ? 'var(--green)' : 'var(--red)'}">
-                                            ${paperPnl >= 0 ? '+' : ''}${paperPnl.toFixed(4)} SOL (${paperPnlPercent >= 0 ? '+' : ''}${paperPnlPercent.toFixed(1)}%)
-                                        </span>
+                                        <span class="panel-value" style="color:${(stats?.paper_pnl_sol || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${(stats?.paper_pnl_sol || 0) >= 0 ? '+' : ''}${(stats?.paper_pnl_sol || 0).toFixed(4)} SOL</span>
                                     </div>
                                     <div class="panel-row">
                                         <span class="panel-label">WIN RATE</span>
-                                        <span class="panel-value" style="color: ${paperWinRate >= 50 ? 'var(--green)' : 'var(--red)'}">
-                                            ${paperWinRate.toFixed(1)}%
-                                        </span>
+                                        <span class="panel-value" style="color:${(stats?.paper_win_rate || 0) >= 50 ? 'var(--green)' : 'var(--red)'}">${(stats?.paper_win_rate || 0).toFixed(1)}%</span>
                                     </div>
                                     <div class="panel-row">
                                         <span class="panel-label">TRADES</span>
-                                        <span class="panel-value">
-                                            ${paperTrades}
-                                            <span style="color: var(--green)">${paperWins}w</span> /
-                                            <span style="color: var(--red)">${paperLosses}l</span>
-                                            <span style="color: var(--amber)">OPEN ${paperOpen}</span>
-                                        </span>
+                                        <span class="panel-value">${stats?.paper_trades || 0} <span style="color:var(--green)">${stats?.paper_wins || 0}w</span> / <span style="color:var(--red)">${stats?.paper_losses || 0}l</span></span>
                                     </div>
                                 </div>
                                 <div class="panel-footer">Started with 10 SOL</div>
                             </div>
 
-                            <!-- Wallet -->
                             <div class="card">
-                                <div class="card-header">
-                                    <h2 class="card-title font-pixel">WALLET</h2>
-                                </div>
+                                <div class="card-header"><h3 class="card-title font-pixel">WALLET</h3></div>
                                 <div class="card-body">
                                     <div class="panel-row">
                                         <span class="panel-label">Address</span>
-                                        <span class="panel-value" style="font-size: 0.75rem;">
-                                            ${status?.wallet_address ? `${status.wallet_address.slice(0, 4)}...${status.wallet_address.slice(-4)}` : '-'}
-                                        </span>
+                                        <span class="panel-value" style="font-size:0.75rem">${status?.wallet_address || '-'}</span>
                                     </div>
                                     <div class="panel-row">
                                         <span class="panel-label">Balance</span>
-                                        <span class="panel-value">${status?.balance_sol?.toFixed(4) || '0.0000'} SOL</span>
+                                        <span class="panel-value">${(status?.balance_sol || 0).toFixed(4)} SOL</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Links -->
                             <div class="card">
-                                <div class="card-header">
-                                    <h2 class="card-title font-pixel">LINKS</h2>
-                                </div>
+                                <div class="card-header"><h3 class="card-title font-pixel">LINKS</h3></div>
                                 <div class="card-body">
                                     <a href="https://pump.fun" target="_blank" class="link-item">> pump.fun</a>
                                     <a href="https://solscan.io" target="_blank" class="link-item">> solscan.io</a>
@@ -1112,7 +486,6 @@
                     </div>
                 </main>
 
-                <!-- Footer -->
                 <footer class="footer">
                     <div class="footer-content">
                         <div>VIBES Trading v1.0.0 | Powered by Claude AI</div>
@@ -1127,69 +500,34 @@
             render();
         }
 
-        // Initialize
-        async function init() {
+        async function generateThought() {
+            if (!state.isConnected) return;
             try {
-                const [status, stats, trades, thoughts] = await Promise.all([
-                    fetchSystemStatus(),
-                    fetchStats(),
-                    fetchTrades(),
-                    fetchThoughts()
-                ]);
-
-                state = { ...state, status, stats, trades, thoughts };
+                await fetch(`${API_URL}/thoughts/generate`, { method: 'POST' });
+                await fetchData();
                 render();
-
-                // Subscribe to realtime updates
-                supabase.channel('system_status_changes')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'system_status' }, (payload) => {
-                        state.status = payload.new;
-                        render();
-                    })
-                    .subscribe();
-
-                supabase.channel('stats_changes')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'stats' }, (payload) => {
-                        state.stats = payload.new;
-                        render();
-                    })
-                    .subscribe();
-
-                supabase.channel('trades_changes')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'trades' }, (payload) => {
-                        if (payload.eventType === 'INSERT') {
-                            state.trades = [payload.new, ...state.trades].slice(0, 50);
-                        } else if (payload.eventType === 'UPDATE') {
-                            state.trades = state.trades.map(t => t.id === payload.new.id ? payload.new : t);
-                        }
-                        render();
-                    })
-                    .subscribe();
-
-                supabase.channel('thoughts_changes')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'thoughts' }, (payload) => {
-                        if (payload.eventType === 'INSERT') {
-                            state.thoughts = [payload.new, ...state.thoughts].slice(0, 10);
-                        }
-                        render();
-                    })
-                    .subscribe();
-
-            } catch (error) {
-                console.error('Init error:', error);
-                document.getElementById('app').innerHTML = `
-                    <div class="loading">
-                        <div class="font-pixel" style="color: var(--red); font-size: 1rem;">ERROR</div>
-                        <div class="loading-text">Failed to connect. Check your Supabase configuration.</div>
-                        <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-dim);">
-                            Edit the SUPABASE_URL and SUPABASE_KEY in index.html
-                        </div>
-                    </div>
-                `;
+            } catch (e) {
+                console.log('Generate thought error:', e);
             }
         }
 
-        // Start app
+        async function init() {
+            const hasSupabase = initSupabase();
+            if (hasSupabase) {
+                await fetchData();
+                // Setup realtime
+                if (supabase && state.isConnected) {
+                    supabase.channel('changes')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'system_status' }, p => { if (p.new) { state.status = p.new; render(); } })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'stats' }, p => { if (p.new) { state.stats = p.new; render(); } })
+                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'trades' }, p => { if (p.new) { state.trades = [p.new, ...state.trades].slice(0,50); render(); } })
+                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'thoughts' }, p => { if (p.new) { state.thoughts = [p.new, ...state.thoughts].slice(0,10); render(); } })
+                        .subscribe();
+                }
+            }
+            render();
+        }
+
         init();
     </script>
 </body>
