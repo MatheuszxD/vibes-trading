@@ -4,16 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIBES Trading | Autonomous Solana Trader</title>
-    <meta name="description" content="Autonomous trading bot on Solana blockchain powered by Claude AI">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --bg: #0a0a0a;
             --card: #18181b;
-            --card-hover: #27272a;
             --border: #3f3f46;
             --text: #ededed;
             --text-dim: #a1a1aa;
@@ -22,513 +18,266 @@
             --amber: #f59e0b;
             --red: #ef4444;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'JetBrains Mono', monospace;
-            background-color: var(--bg);
+            background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            line-height: 1.5;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
-            pointer-events: none;
-            z-index: 1000;
-            opacity: 0.3;
         }
         .font-pixel { font-family: 'Press Start 2P', monospace; }
-        .glow-green { text-shadow: 0 0 5px var(--green), 0 0 10px var(--green), 0 0 20px rgba(34,197,94,0.4); }
+        .glow { text-shadow: 0 0 10px var(--green), 0 0 20px var(--green); }
+
+        /* Header */
         .header {
             border-bottom: 1px solid var(--border);
-            background: rgba(10,10,10,0.95);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-        .header-content {
-            max-width: 1280px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
-        .logo { display: flex; align-items: center; gap: 1rem; }
-        .logo h1 { font-size: 1.25rem; color: var(--green); letter-spacing: 0.1em; }
-        .tagline { color: var(--text-dim); font-size: 0.75rem; }
-        @media (max-width: 640px) { .tagline { display: none; } }
-        .nav { display: flex; align-items: center; gap: 0.5rem; }
-        .nav-link {
-            color: var(--text-dim);
-            font-size: 0.75rem;
-            text-decoration: none;
-            padding: 0.25rem 0.75rem;
-            transition: color 0.2s;
-        }
-        .nav-link:hover { color: var(--text); }
-        .nav-link.active { color: var(--green); border: 1px solid rgba(34,197,94,0.5); }
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            background: var(--card);
-            border-radius: 4px;
-            margin-left: 1rem;
-        }
-        .status-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--red);
-        }
-        .status-dot.online { background: var(--green); box-shadow: 0 0 10px var(--green); }
-        .status-dot.analyzing { background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: pulse 2s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .ticker-bar {
-            background: var(--card);
-            border-bottom: 1px solid var(--border);
-            padding: 0.5rem 0;
-            overflow: hidden;
-        }
-        .ticker-content {
-            display: flex;
-            gap: 2rem;
-            animation: ticker 30s linear infinite;
-            white-space: nowrap;
-        }
-        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ticker-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
-        .demo-banner {
-            background: rgba(245,158,11,0.2);
-            border-bottom: 1px solid var(--amber);
-            color: var(--amber);
-            text-align: center;
-            padding: 0.5rem;
-            font-size: 0.75rem;
-        }
-        .main { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1rem; }
-        .grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media (min-width: 1024px) { .grid { grid-template-columns: 2fr 1fr; } }
-        .left-col, .right-col { display: flex; flex-direction: column; gap: 1.5rem; }
-        .card { background: var(--card); border: 1px solid var(--border); }
-        .card-header {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .card-title { font-size: 0.75rem; color: var(--text); }
+        .logo { color: var(--green); font-size: 1.2rem; letter-spacing: 2px; }
+        .tagline { color: var(--text-dim); font-size: 0.7rem; margin-left: 1rem; }
+        .nav { display: flex; gap: 1rem; align-items: center; }
+        .nav a { color: var(--text-dim); text-decoration: none; font-size: 0.75rem; }
+        .nav a:hover { color: var(--text); }
+        .nav a.active { color: var(--green); border: 1px solid var(--green); padding: 0.25rem 0.5rem; }
+        .status { display: flex; align-items: center; gap: 0.5rem; background: var(--card); padding: 0.25rem 0.75rem; border-radius: 4px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: pulse 2s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
+
+        /* Banner */
+        .banner { background: rgba(245,158,11,0.15); border-bottom: 1px solid var(--amber); color: var(--amber); text-align: center; padding: 0.5rem; font-size: 0.75rem; }
+
+        /* Ticker */
+        .ticker { background: var(--card); border-bottom: 1px solid var(--border); padding: 0.5rem; text-align: center; font-size: 0.8rem; color: var(--text-dim); }
+
+        /* Main */
+        .main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        @media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+
+        /* Cards */
+        .card { background: var(--card); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .card-header { padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 0.7rem; }
         .card-body { padding: 1rem; }
-        .progress-bar { height: 4px; background: var(--card-hover); border-radius: 2px; overflow: hidden; margin-bottom: 1rem; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--green-bright)); transition: width 0.5s ease; }
-        .progress-steps { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 1rem; }
-        .progress-step { color: var(--text-dim); }
-        .progress-step.active { color: var(--green); }
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-        @media (min-width: 1024px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
-        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 1rem; transition: all 0.2s; }
-        .stat-card:hover { background: var(--card-hover); transform: translateY(-2px); }
-        .stat-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem; }
-        .stat-value { font-size: 0.875rem; }
-        .stat-value.positive { color: var(--green); }
-        .stat-value.negative { color: var(--red); }
-        .terminal-prompt { color: var(--green); font-size: 0.875rem; margin-bottom: 1rem; }
-        .terminal-prompt span { color: var(--text-dim); }
-        .terminal-output { min-height: 120px; margin-bottom: 1rem; }
-        .terminal-line { font-size: 0.875rem; margin-bottom: 0.25rem; }
-        .terminal-line span { color: var(--text-dim); margin-right: 0.5rem; }
-        .terminal-cursor { animation: blink 1s step-end infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        .btn {
-            background: var(--card);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.5rem 1rem;
-            font-family: inherit;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn:hover { background: var(--card-hover); border-color: #52525b; }
-        .terminal-footer {
-            border-top: 1px solid var(--border);
-            padding: 0.75rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: var(--text-dim);
-        }
-        .panel-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; }
-        .panel-label { font-size: 0.75rem; color: var(--text-dim); }
-        .panel-value { font-size: 0.875rem; }
-        .panel-footer {
-            border-top: 1px solid var(--border);
-            padding: 0.75rem 1rem;
-            text-align: center;
-            font-size: 0.75rem;
-            color: var(--text-dim);
-        }
-        .toggle {
-            position: relative;
-            width: 48px; height: 24px;
-            border-radius: 12px;
-            background: var(--amber);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .toggle.live { background: var(--green); }
-        .toggle-knob {
-            position: absolute;
-            top: 4px; left: 4px;
-            width: 16px; height: 16px;
-            border-radius: 50%;
-            background: white;
-            transition: transform 0.2s;
-        }
-        .toggle.live .toggle-knob { transform: translateX(24px); }
-        .link-item { display: block; color: var(--green); font-size: 0.875rem; text-decoration: none; padding: 0.25rem 0; }
-        .link-item:hover { text-decoration: underline; }
-        .footer { border-top: 1px solid var(--border); padding: 1rem; margin-top: auto; }
-        .footer-content {
-            max-width: 1280px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            align-items: center;
-            font-size: 0.75rem;
-            color: var(--text-dim);
-        }
-        @media (min-width: 640px) { .footer-content { flex-direction: row; justify-content: space-between; } }
-        .empty-state { text-align: center; color: var(--text-dim); font-size: 0.875rem; padding: 2rem; }
+
+        /* Progress */
+        .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin: 1rem 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--green-bright)); border-radius: 2px; width: 42%; }
+        .progress-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-dim); }
+        .progress-labels span.active { color: var(--green); }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        @media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        .stat { background: var(--card); border: 1px solid var(--border); padding: 1rem; }
+        .stat-label { font-size: 0.65rem; color: var(--text-dim); margin-bottom: 0.5rem; }
+        .stat-value { font-size: 0.8rem; }
+        .stat-value.green { color: var(--green); }
+        .stat-value.amber { color: var(--amber); }
+
+        /* Terminal */
+        .terminal-line { font-size: 0.85rem; margin-bottom: 0.25rem; }
+        .terminal-line span { color: var(--text-dim); }
+        .prompt { color: var(--green); margin-bottom: 1rem; }
+        .btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; font-size: 0.7rem; cursor: pointer; font-family: inherit; }
+        .btn:hover { background: var(--border); }
+        .terminal-footer { border-top: 1px solid var(--border); padding: 0.75rem 1rem; display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-dim); }
+
+        /* Panel */
+        .panel-row { display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.85rem; }
+        .panel-label { color: var(--text-dim); font-size: 0.7rem; }
+        .toggle { width: 48px; height: 24px; background: var(--amber); border-radius: 12px; position: relative; }
+        .toggle-knob { width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 4px; left: 4px; }
+
+        /* Footer */
+        .footer { border-top: 1px solid var(--border); padding: 1rem; text-align: center; font-size: 0.7rem; color: var(--text-dim); }
+
+        /* Links */
+        .link { display: block; color: var(--green); text-decoration: none; font-size: 0.85rem; padding: 0.25rem 0; }
+        .link:hover { text-decoration: underline; }
+
+        /* Empty */
+        .empty { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.85rem; }
     </style>
 </head>
 <body>
-    <div id="app"></div>
-    <script>
-        // Configuration
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const API_URL = 'http://localhost:3001';
+    <!-- Banner -->
+    <div class="banner">DEMO MODE - Configure Supabase to connect to live data</div>
 
-        // Mock data
-        const mockData = {
-            status: {
-                id: 1,
-                wallet_address: 'Demo...Mode',
-                balance_sol: 0,
-                status: 'ANALYZING',
-                mode: 'PAPER',
-                analysis_progress: 42,
-                trades_analyzed: 42,
-                trades_remaining: 58
-            },
-            stats: {
-                paper_balance: 10,
-                paper_pnl_sol: 0,
-                paper_pnl_percent: 0,
-                paper_win_rate: 0,
-                paper_trades: 0,
-                paper_wins: 0,
-                paper_losses: 0,
-                paper_open: 0
-            },
-            trades: [],
-            thoughts: [{
-                id: '1',
-                content: '> waiting for the bot to start trading ser\n> connect your supabase and run the bot\n> paper mode ready with 10 SOL\n> ngl this terminal looks kinda clean tho\n> gmi once you configure everything fr',
-                trigger: 'AUTO',
-                trades_count: 0,
-                win_rate: 0,
-                pnl_sol: 0,
-                created_at: new Date().toISOString()
-            }]
-        };
+    <!-- Header -->
+    <header class="header">
+        <div style="display: flex; align-items: center;">
+            <h1 class="font-pixel logo glow">VIBES</h1>
+            <span class="tagline">autonomous trader on solana blockchain powered by claude</span>
+        </div>
+        <nav class="nav">
+            <a href="#" class="active">[DASHBOARD]</a>
+            <a href="#stats">[STATS]</a>
+            <a href="https://github.com/MatheuszxD/vibes-trading" target="_blank">[DOCS]</a>
+            <div class="status">
+                <span class="dot"></span>
+                <span style="font-size: 0.7rem; color: var(--text-dim);">ANALYZING</span>
+            </div>
+        </nav>
+    </header>
 
-        let state = { ...mockData, isConnected: false, showHistory: false };
-        let supabase = null;
+    <!-- Ticker -->
+    <div class="ticker">Waiting for trades...</div>
 
-        // Initialize Supabase if configured
-        function initSupabase() {
-            if (SUPABASE_URL && SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_KEY && SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
-                try {
-                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    return true;
-                } catch (e) {
-                    console.log('Failed to init Supabase:', e);
-                }
-            }
-            return false;
-        }
-
-        // Fetch functions
-        async function fetchData() {
-            if (!supabase) return;
-            try {
-                const [statusRes, statsRes, tradesRes, thoughtsRes] = await Promise.all([
-                    supabase.from('system_status').select('*').eq('id', 1).single(),
-                    supabase.from('stats').select('*').eq('id', 1).single(),
-                    supabase.from('trades').select('*').order('created_at', { ascending: false }).limit(50),
-                    supabase.from('thoughts').select('*').order('created_at', { ascending: false }).limit(10)
-                ]);
-                if (statusRes.data) { state.status = statusRes.data; state.isConnected = true; }
-                if (statsRes.data) state.stats = statsRes.data;
-                if (tradesRes.data) state.trades = tradesRes.data;
-                if (thoughtsRes.data && thoughtsRes.data.length > 0) state.thoughts = thoughtsRes.data;
-            } catch (e) {
-                console.log('Fetch error:', e);
-            }
-        }
-
-        function getStatusClass(s) {
-            if (s === 'TRADING') return 'online';
-            if (s === 'ANALYZING') return 'analyzing';
-            return '';
-        }
-
-        function render() {
-            const { status, stats, trades, thoughts, isConnected, showHistory } = state;
-            const progress = status?.analysis_progress || 0;
-            const isComplete = progress >= 100;
-            const latestThought = thoughts[0];
-            const historyThoughts = thoughts.slice(1);
-            const openPositions = trades.filter(t => t.side === 'BUY' && t.pnl_sol === null).length;
-            const isPaper = status?.mode === 'PAPER';
-
-            document.getElementById('app').innerHTML = `
-                ${!isConnected ? '<div class="demo-banner">DEMO MODE - Configure SUPABASE_URL and SUPABASE_KEY in index.html to connect</div>' : ''}
-                <header class="header">
-                    <div class="header-content">
-                        <div class="logo">
-                            <h1 class="font-pixel glow-green">VIBES</h1>
-                            <span class="tagline">autonomous trader on solana blockchain powered by claude</span>
-                        </div>
-                        <nav class="nav">
-                            <a href="#" class="nav-link active">[DASHBOARD]</a>
-                            <a href="#stats" class="nav-link">[STATS]</a>
-                            <a href="https://github.com/MatheuszxD/vibes-trading" target="_blank" class="nav-link">[DOCS]</a>
-                            <div class="status-badge">
-                                <span class="status-dot ${getStatusClass(status?.status)}"></span>
-                                <span style="font-size:0.75rem;color:var(--text-dim);text-transform:uppercase">${status?.status || 'OFFLINE'}</span>
-                            </div>
-                        </nav>
+    <!-- Main Content -->
+    <main class="main">
+        <div class="left">
+            <!-- Pre-Trading Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title font-pixel">PRE-TRADING ANALYSIS</h2>
+                    <span style="color: var(--amber); font-size: 0.7rem;">[PROCESSING]</span>
+                </div>
+                <div class="card-body">
+                    <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1rem;">Loading historical market data...</p>
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
+                    <div class="progress-labels">
+                        <span class="active">0%</span>
+                        <span class="active">25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
                     </div>
-                </header>
-
-                <div class="ticker-bar">
-                    <div style="text-align:center;color:var(--text-dim);font-size:0.75rem">
-                        ${trades.length > 0 ? trades.slice(0,5).map(t => `<span style="margin:0 1rem;color:${t.pnl_percent >= 0 ? 'var(--green)' : 'var(--red)'}">● ${t.symbol} ${t.pnl_percent >= 0 ? '+' : ''}${(t.pnl_percent || 0).toFixed(1)}%</span>`).join('') : 'Waiting for trades...'}
+                    <div style="display: flex; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.75rem;">
+                        <span style="color: var(--text-dim);"><span style="color: var(--amber);">58</span> trades remaining</span>
+                        <span style="color: var(--text-dim);"><span style="color: var(--green);">42</span> trades analyzed</span>
                     </div>
                 </div>
+            </div>
 
-                <main class="main">
-                    <div class="grid">
-                        <div class="left-col">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h2 class="card-title font-pixel">PRE-TRADING ANALYSIS</h2>
-                                    <span style="font-size:0.75rem;color:${isComplete ? 'var(--green)' : 'var(--amber)'};animation:pulse 2s ease-in-out infinite">[${isComplete ? 'COMPLETE' : 'PROCESSING'}]</span>
-                                </div>
-                                <div class="card-body">
-                                    <p style="color:var(--text-dim);font-size:0.875rem;margin-bottom:1rem">${isComplete ? 'Analysis complete. Trading mode active.' : 'Loading historical market data...'}</p>
-                                    <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
-                                    <div class="progress-steps">
-                                        ${[0,25,50,75,100].map(s => `<span class="progress-step ${progress >= s ? 'active' : ''}">${s}%</span>`).join('')}
-                                    </div>
-                                    <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding-top:1rem;border-top:1px solid var(--border)">
-                                        <span style="color:var(--text-dim)"><span style="color:var(--amber)">${status?.trades_remaining || 0}</span> remaining</span>
-                                        <span style="color:var(--text-dim)"><span style="color:var(--green)">${status?.trades_analyzed || 0}</span> analyzed</span>
-                                    </div>
-                                </div>
-                            </div>
+            <!-- Stats -->
+            <div class="stats-grid" id="stats">
+                <div class="stat">
+                    <div class="stat-label">TOTAL PNL</div>
+                    <div class="stat-value font-pixel green glow">+0.0000 SOL</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">WIN RATE</div>
+                    <div class="stat-value font-pixel amber">0.0%</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">TOTAL TRADES</div>
+                    <div class="stat-value font-pixel">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">OPEN POS</div>
+                    <div class="stat-value font-pixel" style="color: var(--text-dim);">0 / 5</div>
+                </div>
+            </div>
 
-                            <div class="stats-grid" id="stats">
-                                <div class="stat-card">
-                                    <div class="stat-label">TOTAL PNL</div>
-                                    <div class="stat-value font-pixel ${(stats?.paper_pnl_sol || 0) >= 0 ? 'positive glow-green' : 'negative'}">${(stats?.paper_pnl_sol || 0) >= 0 ? '+' : ''}${(stats?.paper_pnl_sol || 0).toFixed(4)} SOL</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-label">WIN RATE</div>
-                                    <div class="stat-value font-pixel" style="color:${(stats?.paper_win_rate || 0) >= 50 ? 'var(--green)' : 'var(--amber)'}">${(stats?.paper_win_rate || 0).toFixed(1)}%</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-label">TOTAL TRADES</div>
-                                    <div class="stat-value font-pixel">${stats?.paper_trades || 0}</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-label">OPEN POS</div>
-                                    <div class="stat-value font-pixel" style="color:${openPositions > 0 ? 'var(--amber)' : 'var(--text-dim)'}">${openPositions} / 5</div>
-                                </div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-header">
-                                    <div style="display:flex;align-items:center;gap:0.5rem">
-                                        <h2 class="card-title font-pixel" style="color:var(--amber)">thoughts?</h2>
-                                        <span style="color:var(--text-dim);font-size:0.75rem">- ai analysis</span>
-                                    </div>
-                                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text-dim)">
-                                        <span class="status-dot online"></span> ready
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="terminal-prompt"><span>$</span> analyze --trades --roast</div>
-                                    <div class="terminal-output">
-                                        ${latestThought ? latestThought.content.split('\n').filter(l => l.trim()).map(line => `<div class="terminal-line"><span>></span>${line.replace(/^>\s*/, '')}</div>`).join('') : '<div class="terminal-line"><span>></span>waiting for trades to analyze...<span class="terminal-cursor">_</span></div>'}
-                                    </div>
-                                    <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
-                                        <button class="btn" onclick="toggleHistory()">history (${historyThoughts.length})</button>
-                                        <button class="btn" onclick="generateThought()">force refresh</button>
-                                    </div>
-                                    ${showHistory && historyThoughts.length > 0 ? `
-                                        <div style="border-top:1px solid var(--border);padding-top:1rem">
-                                            <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.5rem">Previous thoughts:</div>
-                                            ${historyThoughts.map(t => `
-                                                <div style="background:var(--bg);border:1px solid var(--border);padding:0.75rem;margin-bottom:0.5rem;font-size:0.75rem">
-                                                    <div style="color:var(--text-dim);margin-bottom:0.5rem">${new Date(t.created_at).toLocaleString()}</div>
-                                                    ${t.content.split('\n').filter(l => l.trim()).map(line => `<div><span style="color:var(--text-dim);margin-right:0.25rem">></span>${line.replace(/^>\s*/, '')}</div>`).join('')}
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : ''}
-                                </div>
-                                <div class="terminal-footer">
-                                    <span>powered by claude</span>
-                                    <span>auto-refresh every 5 trades</span>
-                                </div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-header"><h2 class="card-title font-pixel">RECENT TRADES</h2></div>
-                                ${trades.length > 0 ? `
-                                    <div style="overflow-x:auto">
-                                        <table style="width:100%;font-size:0.875rem;border-collapse:collapse">
-                                            <thead>
-                                                <tr style="border-bottom:1px solid var(--border)">
-                                                    <th style="text-align:left;padding:0.75rem;font-weight:normal;color:var(--text-dim);font-size:0.75rem">TOKEN</th>
-                                                    <th style="text-align:left;padding:0.75rem;font-weight:normal;color:var(--text-dim);font-size:0.75rem">SIDE</th>
-                                                    <th style="text-align:right;padding:0.75rem;font-weight:normal;color:var(--text-dim);font-size:0.75rem">AMOUNT</th>
-                                                    <th style="text-align:right;padding:0.75rem;font-weight:normal;color:var(--text-dim);font-size:0.75rem">PNL</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                ${trades.slice(0,10).map(t => `
-                                                    <tr style="border-bottom:1px solid rgba(63,63,70,0.5)">
-                                                        <td style="padding:0.75rem">${t.symbol}${t.is_paper ? '<span style="color:var(--amber);font-size:0.75rem;margin-left:0.5rem">[P]</span>' : ''}</td>
-                                                        <td style="padding:0.75rem;color:${t.side === 'BUY' ? 'var(--green)' : 'var(--red)'}">${t.side}</td>
-                                                        <td style="padding:0.75rem;text-align:right">${(t.amount_sol || 0).toFixed(4)} SOL</td>
-                                                        <td style="padding:0.75rem;text-align:right;color:${t.pnl_sol === null ? 'var(--text-dim)' : t.pnl_sol >= 0 ? 'var(--green)' : 'var(--red)'}">${t.pnl_sol === null ? '-' : `${t.pnl_sol >= 0 ? '+' : ''}${t.pnl_sol.toFixed(4)}`}</td>
-                                                    </tr>
-                                                `).join('')}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ` : '<div class="empty-state">No trades yet. Waiting for opportunities...</div>'}
-                            </div>
-                        </div>
-
-                        <div class="right-col">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h2 class="card-title font-pixel" style="color:var(--amber)">${isPaper ? 'PAPER MODE' : 'LIVE MODE'}</h2>
-                                    <div class="toggle ${isPaper ? '' : 'live'}"><div class="toggle-knob"></div></div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="panel-row">
-                                        <span class="panel-label">BALANCE</span>
-                                        <span class="panel-value">${(stats?.paper_balance || 10).toFixed(4)} SOL</span>
-                                    </div>
-                                    <div class="panel-row">
-                                        <span class="panel-label">PNL</span>
-                                        <span class="panel-value" style="color:${(stats?.paper_pnl_sol || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${(stats?.paper_pnl_sol || 0) >= 0 ? '+' : ''}${(stats?.paper_pnl_sol || 0).toFixed(4)} SOL</span>
-                                    </div>
-                                    <div class="panel-row">
-                                        <span class="panel-label">WIN RATE</span>
-                                        <span class="panel-value" style="color:${(stats?.paper_win_rate || 0) >= 50 ? 'var(--green)' : 'var(--red)'}">${(stats?.paper_win_rate || 0).toFixed(1)}%</span>
-                                    </div>
-                                    <div class="panel-row">
-                                        <span class="panel-label">TRADES</span>
-                                        <span class="panel-value">${stats?.paper_trades || 0} <span style="color:var(--green)">${stats?.paper_wins || 0}w</span> / <span style="color:var(--red)">${stats?.paper_losses || 0}l</span></span>
-                                    </div>
-                                </div>
-                                <div class="panel-footer">Started with 10 SOL</div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-header"><h3 class="card-title font-pixel">WALLET</h3></div>
-                                <div class="card-body">
-                                    <div class="panel-row">
-                                        <span class="panel-label">Address</span>
-                                        <span class="panel-value" style="font-size:0.75rem">${status?.wallet_address || '-'}</span>
-                                    </div>
-                                    <div class="panel-row">
-                                        <span class="panel-label">Balance</span>
-                                        <span class="panel-value">${(status?.balance_sol || 0).toFixed(4)} SOL</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-header"><h3 class="card-title font-pixel">LINKS</h3></div>
-                                <div class="card-body">
-                                    <a href="https://pump.fun" target="_blank" class="link-item">> pump.fun</a>
-                                    <a href="https://solscan.io" target="_blank" class="link-item">> solscan.io</a>
-                                    <a href="https://github.com/MatheuszxD/vibes-trading" target="_blank" class="link-item">> github repo</a>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Thoughts Terminal -->
+            <div class="card">
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <h2 class="card-title font-pixel" style="color: var(--amber);">thoughts?</h2>
+                        <span style="color: var(--text-dim); font-size: 0.7rem;">- ai analysis</span>
                     </div>
-                </main>
-
-                <footer class="footer">
-                    <div class="footer-content">
-                        <div>VIBES Trading v1.0.0 | Powered by Claude AI</div>
-                        <div>Built for Solana | Not Financial Advice</div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="dot" style="background: var(--green); box-shadow: 0 0 10px var(--green);"></span>
+                        <span style="font-size: 0.7rem; color: var(--text-dim);">ready</span>
                     </div>
-                </footer>
-            `;
-        }
+                </div>
+                <div class="card-body">
+                    <div class="prompt">$ analyze --trades --roast</div>
+                    <div style="min-height: 100px;">
+                        <div class="terminal-line"><span>></span> waiting for the bot to start trading ser</div>
+                        <div class="terminal-line"><span>></span> connect your supabase and run the bot</div>
+                        <div class="terminal-line"><span>></span> paper mode ready with 10 SOL</div>
+                        <div class="terminal-line"><span>></span> ngl this terminal looks kinda clean tho</div>
+                        <div class="terminal-line"><span>></span> gmi once you configure everything fr</div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button class="btn">history (0)</button>
+                        <button class="btn">force refresh</button>
+                    </div>
+                </div>
+                <div class="terminal-footer">
+                    <span>powered by claude</span>
+                    <span>auto-refresh every 5 trades</span>
+                </div>
+            </div>
 
-        function toggleHistory() {
-            state.showHistory = !state.showHistory;
-            render();
-        }
+            <!-- Trades -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title font-pixel">RECENT TRADES</h2>
+                </div>
+                <div class="empty">No trades yet. Waiting for opportunities...</div>
+            </div>
+        </div>
 
-        async function generateThought() {
-            if (!state.isConnected) return;
-            try {
-                await fetch(`${API_URL}/thoughts/generate`, { method: 'POST' });
-                await fetchData();
-                render();
-            } catch (e) {
-                console.log('Generate thought error:', e);
-            }
-        }
+        <div class="right">
+            <!-- Paper Mode -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title font-pixel" style="color: var(--amber);">PAPER MODE</h2>
+                    <div class="toggle"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="card-body">
+                    <div class="panel-row">
+                        <span class="panel-label">BALANCE</span>
+                        <span>10.0000 SOL</span>
+                    </div>
+                    <div class="panel-row">
+                        <span class="panel-label">PNL</span>
+                        <span style="color: var(--green);">+0.0000 SOL (0.0%)</span>
+                    </div>
+                    <div class="panel-row">
+                        <span class="panel-label">WIN RATE</span>
+                        <span style="color: var(--amber);">0.0%</span>
+                    </div>
+                    <div class="panel-row">
+                        <span class="panel-label">TRADES</span>
+                        <span>0 <span style="color: var(--green);">0w</span> / <span style="color: var(--red);">0l</span></span>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid var(--border); padding: 0.75rem; text-align: center; font-size: 0.7rem; color: var(--text-dim);">
+                    Started with 10 SOL
+                </div>
+            </div>
 
-        async function init() {
-            const hasSupabase = initSupabase();
-            if (hasSupabase) {
-                await fetchData();
-                // Setup realtime
-                if (supabase && state.isConnected) {
-                    supabase.channel('changes')
-                        .on('postgres_changes', { event: '*', schema: 'public', table: 'system_status' }, p => { if (p.new) { state.status = p.new; render(); } })
-                        .on('postgres_changes', { event: '*', schema: 'public', table: 'stats' }, p => { if (p.new) { state.stats = p.new; render(); } })
-                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'trades' }, p => { if (p.new) { state.trades = [p.new, ...state.trades].slice(0,50); render(); } })
-                        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'thoughts' }, p => { if (p.new) { state.thoughts = [p.new, ...state.thoughts].slice(0,10); render(); } })
-                        .subscribe();
-                }
-            }
-            render();
-        }
+            <!-- Wallet -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title font-pixel">WALLET</h2>
+                </div>
+                <div class="card-body">
+                    <div class="panel-row">
+                        <span class="panel-label">Address</span>
+                        <span style="font-size: 0.75rem;">Demo...Mode</span>
+                    </div>
+                    <div class="panel-row">
+                        <span class="panel-label">Balance</span>
+                        <span>0.0000 SOL</span>
+                    </div>
+                </div>
+            </div>
 
-        init();
-    </script>
+            <!-- Links -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title font-pixel">LINKS</h2>
+                </div>
+                <div class="card-body">
+                    <a href="https://pump.fun" target="_blank" class="link">> pump.fun</a>
+                    <a href="https://solscan.io" target="_blank" class="link">> solscan.io</a>
+                    <a href="https://github.com/MatheuszxD/vibes-trading" target="_blank" class="link">> github repo</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        VIBES Trading v1.0.0 | Powered by Claude AI | Built for Solana | Not Financial Advice
+    </footer>
 </body>
 </html>
