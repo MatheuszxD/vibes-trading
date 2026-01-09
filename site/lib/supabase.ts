@@ -1,7 +1,8 @@
 import { createClient, RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Hardcode the values to ensure they work on Vercel
+const SUPABASE_URL = 'https://xumydwyfwhbmdlffapue.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bXlkd3lmd2hibWRsZmZhcHVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4OTIzMTksImV4cCI6MjA4MzQ2ODMxOX0.rTy8Em9hnbjMTYaK_Wvw_17w1x2Jj6QFd7q1J6G9168';
 
 let supabaseInstance: SupabaseClient | null = null;
 
@@ -9,8 +10,8 @@ let supabaseInstance: SupabaseClient | null = null;
 function getSupabase(): SupabaseClient | null {
   if (typeof window === 'undefined') return null;
 
-  if (!supabaseInstance && supabaseUrl && supabaseKey) {
-    supabaseInstance = createClient(supabaseUrl, supabaseKey, {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(SUPABASE_URL, SUPABASE_KEY, {
       realtime: {
         params: {
           eventsPerSecond: 10,
