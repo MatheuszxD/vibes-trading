@@ -1,15 +1,35 @@
-import { createClient, RealtimeChannel } from '@supabase/supabase-js';
+import { createClient, RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
-});
+let supabaseInstance: SupabaseClient | null = null;
+
+function getSupabaseClient(): SupabaseClient {
+  if (!supabaseInstance && supabaseUrl && supabaseKey) {
+    supabaseInstance = createClient(supabaseUrl, supabaseKey, {
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    });
+  }
+  if (!supabaseInstance) {
+    throw new Error('Supabase not configured');
+  }
+  return supabaseInstance;
+}
+
+export const supabase = typeof window !== 'undefined' && supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey, {
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    })
+  : null as unknown as SupabaseClient;
 
 // Types
 export interface SystemStatus {
@@ -90,80 +110,106 @@ export interface Stats {
 
 // Fetch functions
 export async function getSystemStatus(): Promise<SystemStatus | null> {
-  const { data, error } = await supabase
-    .from('system_status')
-    .select('*')
-    .eq('id', 1)
-    .single();
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('system_status')
+      .select('*')
+      .eq('id', 1)
+      .single();
 
-  if (error) {
-    console.error('Error fetching system status:', error);
+    if (error) {
+      console.error('Error fetching system status:', error);
+      return null;
+    }
+    return data;
+  } catch {
     return null;
   }
-  return data;
 }
 
 export async function getStats(): Promise<Stats | null> {
-  const { data, error } = await supabase
-    .from('stats')
-    .select('*')
-    .eq('id', 1)
-    .single();
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('stats')
+      .select('*')
+      .eq('id', 1)
+      .single();
 
-  if (error) {
-    console.error('Error fetching stats:', error);
+    if (error) {
+      console.error('Error fetching stats:', error);
+      return null;
+    }
+    return data;
+  } catch {
     return null;
   }
-  return data;
 }
 
 export async function getTokens(limit = 50): Promise<Token[]> {
-  const { data, error } = await supabase
-    .from('tokens')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('tokens')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-  if (error) {
-    console.error('Error fetching tokens:', error);
+    if (error) {
+      console.error('Error fetching tokens:', error);
+      return [];
+    }
+    return data || [];
+  } catch {
     return [];
   }
-  return data || [];
 }
 
 export async function getTrades(limit = 50): Promise<Trade[]> {
-  const { data, error } = await supabase
-    .from('trades')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('trades')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-  if (error) {
-    console.error('Error fetching trades:', error);
+    if (error) {
+      console.error('Error fetching trades:', error);
+      return [];
+    }
+    return data || [];
+  } catch {
     return [];
   }
-  return data || [];
 }
 
 export async function getThoughts(limit = 10): Promise<Thought[]> {
-  const { data, error } = await supabase
-    .from('thoughts')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('thoughts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-  if (error) {
-    console.error('Error fetching thoughts:', error);
+    if (error) {
+      console.error('Error fetching thoughts:', error);
+      return [];
+    }
+    return data || [];
+  } catch {
     return [];
   }
-  return data || [];
 }
 
 // Realtime subscriptions
 export function subscribeToTable<T>(
   table: string,
   callback: (payload: { new: T; old: T; eventType: string }) => void
-): RealtimeChannel {
+): RealtimeChannel | null {
+  if (!supabase) return null;
   return supabase
     .channel(`${table}_changes`)
     .on(

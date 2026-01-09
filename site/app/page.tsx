@@ -116,42 +116,38 @@ export default function Home() {
 
   // Realtime subscriptions (only if connected)
   useEffect(() => {
-    if (!isConnected) return;
+    if (!isConnected || !supabase) return;
 
-    const channels: ReturnType<typeof subscribeToTable>[] = [];
+    const channels: NonNullable<ReturnType<typeof subscribeToTable>>[] = [];
 
     try {
-      channels.push(
-        subscribeToTable<SystemStatus>('system_status', (payload) => {
-          if (payload.new) setStatus(payload.new);
-        })
-      );
+      const ch1 = subscribeToTable<SystemStatus>('system_status', (payload) => {
+        if (payload.new) setStatus(payload.new);
+      });
+      if (ch1) channels.push(ch1);
 
-      channels.push(
-        subscribeToTable<Stats>('stats', (payload) => {
-          if (payload.new) setStats(payload.new);
-        })
-      );
+      const ch2 = subscribeToTable<Stats>('stats', (payload) => {
+        if (payload.new) setStats(payload.new);
+      });
+      if (ch2) channels.push(ch2);
 
-      channels.push(
-        subscribeToTable<Trade>('trades', (payload) => {
-          if (payload.eventType === 'INSERT' && payload.new) {
-            setTrades((prev) => [payload.new, ...prev].slice(0, 50));
-          } else if (payload.eventType === 'UPDATE' && payload.new) {
-            setTrades((prev) =>
-              prev.map((t) => (t.id === payload.new.id ? payload.new : t))
-            );
-          }
-        })
-      );
+      const ch3 = subscribeToTable<Trade>('trades', (payload) => {
+        if (payload.eventType === 'INSERT' && payload.new) {
+          setTrades((prev) => [payload.new, ...prev].slice(0, 50));
+        } else if (payload.eventType === 'UPDATE' && payload.new) {
+          setTrades((prev) =>
+            prev.map((t) => (t.id === payload.new.id ? payload.new : t))
+          );
+        }
+      });
+      if (ch3) channels.push(ch3);
 
-      channels.push(
-        subscribeToTable<Thought>('thoughts', (payload) => {
-          if (payload.eventType === 'INSERT' && payload.new) {
-            setThoughts((prev) => [payload.new, ...prev].slice(0, 10));
-          }
-        })
-      );
+      const ch4 = subscribeToTable<Thought>('thoughts', (payload) => {
+        if (payload.eventType === 'INSERT' && payload.new) {
+          setThoughts((prev) => [payload.new, ...prev].slice(0, 10));
+        }
+      });
+      if (ch4) channels.push(ch4);
     } catch (error) {
       console.log('Failed to subscribe to realtime');
     }
@@ -159,7 +155,7 @@ export default function Home() {
     return () => {
       channels.forEach((channel) => {
         try {
-          supabase.removeChannel(channel);
+          if (supabase) supabase.removeChannel(channel);
         } catch {}
       });
     };
