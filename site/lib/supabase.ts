@@ -5,7 +5,10 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 let supabaseInstance: SupabaseClient | null = null;
 
-function getSupabaseClient(): SupabaseClient {
+// Lazy initialization - only creates client when called on the browser
+function getSupabase(): SupabaseClient | null {
+  if (typeof window === 'undefined') return null;
+
   if (!supabaseInstance && supabaseUrl && supabaseKey) {
     supabaseInstance = createClient(supabaseUrl, supabaseKey, {
       realtime: {
@@ -15,21 +18,19 @@ function getSupabaseClient(): SupabaseClient {
       },
     });
   }
-  if (!supabaseInstance) {
-    throw new Error('Supabase not configured');
-  }
   return supabaseInstance;
 }
 
-export const supabase = typeof window !== 'undefined' && supabaseUrl && supabaseKey
-  ? createClient(supabaseUrl, supabaseKey, {
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
-        },
-      },
-    })
-  : null as unknown as SupabaseClient;
+// Export for backwards compatibility
+export const supabase = {
+  get client() {
+    return getSupabase();
+  },
+  removeChannel(channel: RealtimeChannel) {
+    const client = getSupabase();
+    if (client) client.removeChannel(channel);
+  }
+};
 
 // Types
 export interface SystemStatus {
@@ -110,9 +111,10 @@ export interface Stats {
 
 // Fetch functions
 export async function getSystemStatus(): Promise<SystemStatus | null> {
-  if (!supabase) return null;
+  const client = getSupabase();
+  if (!client) return null;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('system_status')
       .select('*')
       .eq('id', 1)
@@ -129,9 +131,10 @@ export async function getSystemStatus(): Promise<SystemStatus | null> {
 }
 
 export async function getStats(): Promise<Stats | null> {
-  if (!supabase) return null;
+  const client = getSupabase();
+  if (!client) return null;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('stats')
       .select('*')
       .eq('id', 1)
@@ -148,9 +151,10 @@ export async function getStats(): Promise<Stats | null> {
 }
 
 export async function getTokens(limit = 50): Promise<Token[]> {
-  if (!supabase) return [];
+  const client = getSupabase();
+  if (!client) return [];
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('tokens')
       .select('*')
       .order('created_at', { ascending: false })
@@ -167,9 +171,10 @@ export async function getTokens(limit = 50): Promise<Token[]> {
 }
 
 export async function getTrades(limit = 50): Promise<Trade[]> {
-  if (!supabase) return [];
+  const client = getSupabase();
+  if (!client) return [];
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('trades')
       .select('*')
       .order('created_at', { ascending: false })
@@ -186,9 +191,10 @@ export async function getTrades(limit = 50): Promise<Trade[]> {
 }
 
 export async function getThoughts(limit = 10): Promise<Thought[]> {
-  if (!supabase) return [];
+  const client = getSupabase();
+  if (!client) return [];
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('thoughts')
       .select('*')
       .order('created_at', { ascending: false })
@@ -209,8 +215,9 @@ export function subscribeToTable<T>(
   table: string,
   callback: (payload: { new: T; old: T; eventType: string }) => void
 ): RealtimeChannel | null {
-  if (!supabase) return null;
-  return supabase
+  const client = getSupabase();
+  if (!client) return null;
+  return client
     .channel(`${table}_changes`)
     .on(
       'postgres_changes',

@@ -116,7 +116,7 @@ export default function Home() {
 
   // Realtime subscriptions (only if connected)
   useEffect(() => {
-    if (!isConnected || !supabase) return;
+    if (!isConnected) return;
 
     const channels: NonNullable<ReturnType<typeof subscribeToTable>>[] = [];
 
@@ -155,7 +155,7 @@ export default function Home() {
     return () => {
       channels.forEach((channel) => {
         try {
-          if (supabase) supabase.removeChannel(channel);
+          supabase.removeChannel(channel);
         } catch {}
       });
     };
